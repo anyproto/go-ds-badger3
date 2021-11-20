@@ -1,4 +1,4 @@
-module github.com/anytypeio/go-ds-badger
+module github.com/anytypeio/go-ds-badger3
 
 require (
 	github.com/dgraph-io/badger/v3 v3.2103.2
