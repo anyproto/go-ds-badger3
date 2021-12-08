@@ -7,4 +7,6 @@ require (
 	github.com/jbenet/goprocess v0.1.4
 )
 
+replace github.com/dgraph-io/badger/v3 => github.com/anytypeio/badger/v3 v3.2103.3-0.20211208211755-cabe440b3460
+
 go 1.13
