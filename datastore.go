@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	badger "github.com/anytypeio/badger/v3"
+	badger "github.com/dgraph-io/badger/v3"
 	ds "github.com/ipfs/go-datastore"
 	dsq "github.com/ipfs/go-datastore/query"
 	logger "github.com/ipfs/go-log/v2"
