@@ -1,4 +1,4 @@
-module github.com/ipfs/go-ds-badger
+module github.com/anytypeio/go-ds-badger3
 
 require (
 	github.com/dgraph-io/badger v1.6.2
