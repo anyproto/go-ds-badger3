@@ -1,6 +1,7 @@
 package badger
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"runtime"
@@ -191,7 +192,7 @@ func (d *Datastore) periodicGC() {
 // NewTransaction starts a new transaction. The resulting transaction object
 // can be mutated without incurring changes to the underlying Datastore until
 // the transaction is Committed.
-func (d *Datastore) NewTransaction(readOnly bool) (ds.Txn, error) {
+func (d *Datastore) NewTransaction(_ context.Context, readOnly bool) (ds.Txn, error) {
 	d.closeLk.RLock()
 	defer d.closeLk.RUnlock()
 	if d.closed {
@@ -207,7 +208,7 @@ func (d *Datastore) newImplicitTransaction(readOnly bool) *txn {
 	return &txn{d, d.DB.NewTransaction(!readOnly), true}
 }
 
-func (d *Datastore) Put(key ds.Key, value []byte) error {
+func (d *Datastore) Put(_ context.Context, key ds.Key, value []byte) error {
 	d.closeLk.RLock()
 	defer d.closeLk.RUnlock()
 	if d.closed {
@@ -224,7 +225,7 @@ func (d *Datastore) Put(key ds.Key, value []byte) error {
 	return txn.commit()
 }
 
-func (d *Datastore) Sync(prefix ds.Key) error {
+func (d *Datastore) Sync(_ context.Context, prefix ds.Key) error {
 	d.closeLk.RLock()
 	defer d.closeLk.RUnlock()
 	if d.closed {
@@ -238,7 +239,7 @@ func (d *Datastore) Sync(prefix ds.Key) error {
 	return d.DB.Sync()
 }
 
-func (d *Datastore) PutWithTTL(key ds.Key, value []byte, ttl time.Duration) error {
+func (d *Datastore) PutWithTTL(_ context.Context, key ds.Key, value []byte, ttl time.Duration) error {
 	d.closeLk.RLock()
 	defer d.closeLk.RUnlock()
 	if d.closed {
@@ -255,7 +256,7 @@ func (d *Datastore) PutWithTTL(key ds.Key, value []byte, ttl time.Duration) erro
 	return txn.commit()
 }
 
-func (d *Datastore) SetTTL(key ds.Key, ttl time.Duration) error {
+func (d *Datastore) SetTTL(_ context.Context, key ds.Key, ttl time.Duration) error {
 	d.closeLk.RLock()
 	defer d.closeLk.RUnlock()
 	if d.closed {
@@ -272,7 +273,7 @@ func (d *Datastore) SetTTL(key ds.Key, ttl time.Duration) error {
 	return txn.commit()
 }
 
-func (d *Datastore) GetExpiration(key ds.Key) (time.Time, error) {
+func (d *Datastore) GetExpiration(_ context.Context, key ds.Key) (time.Time, error) {
 	d.closeLk.RLock()
 	defer d.closeLk.RUnlock()
 	if d.closed {
@@ -285,7 +286,7 @@ func (d *Datastore) GetExpiration(key ds.Key) (time.Time, error) {
 	return txn.getExpiration(key)
 }
 
-func (d *Datastore) Get(key ds.Key) (value []byte, err error) {
+func (d *Datastore) Get(_ context.Context, key ds.Key) (value []byte, err error) {
 	d.closeLk.RLock()
 	defer d.closeLk.RUnlock()
 	if d.closed {
@@ -298,7 +299,7 @@ func (d *Datastore) Get(key ds.Key) (value []byte, err error) {
 	return txn.get(key)
 }
 
-func (d *Datastore) Has(key ds.Key) (bool, error) {
+func (d *Datastore) Has(_ context.Context, key ds.Key) (bool, error) {
 	d.closeLk.RLock()
 	defer d.closeLk.RUnlock()
 	if d.closed {
@@ -311,7 +312,7 @@ func (d *Datastore) Has(key ds.Key) (bool, error) {
 	return txn.has(key)
 }
 
-func (d *Datastore) GetSize(key ds.Key) (size int, err error) {
+func (d *Datastore) GetSize(_ context.Context, key ds.Key) (size int, err error) {
 	d.closeLk.RLock()
 	defer d.closeLk.RUnlock()
 	if d.closed {
@@ -324,7 +325,7 @@ func (d *Datastore) GetSize(key ds.Key) (size int, err error) {
 	return txn.getSize(key)
 }
 
-func (d *Datastore) Delete(key ds.Key) error {
+func (d *Datastore) Delete(_ context.Context, key ds.Key) error {
 	d.closeLk.RLock()
 	defer d.closeLk.RUnlock()
 
@@ -339,7 +340,7 @@ func (d *Datastore) Delete(key ds.Key) error {
 	return txn.commit()
 }
 
-func (d *Datastore) Query(q dsq.Query) (dsq.Results, error) {
+func (d *Datastore) Query(_ context.Context, q dsq.Query) (dsq.Results, error) {
 	d.closeLk.RLock()
 	defer d.closeLk.RUnlock()
 	if d.closed {
@@ -380,7 +381,7 @@ func (d *Datastore) Close() error {
 
 // Batch creats a new Batch object. This provides a way to do many writes, when
 // there may be too many to fit into a single transaction.
-func (d *Datastore) Batch() (ds.Batch, error) {
+func (d *Datastore) Batch(_ context.Context) (ds.Batch, error) {
 	d.closeLk.RLock()
 	defer d.closeLk.RUnlock()
 	if d.closed {
@@ -398,7 +399,7 @@ func (d *Datastore) Batch() (ds.Batch, error) {
 	return b, nil
 }
 
-func (d *Datastore) CollectGarbage() (err error) {
+func (d *Datastore) CollectGarbage(_ context.Context) (err error) {
 	// The idea is to keep calling DB.RunValueLogGC() till Badger no longer has any log files
 	// to GC(which would be indicated by an error, please refer to Badger GC docs).
 	for err == nil {
@@ -425,7 +426,7 @@ func (d *Datastore) gcOnce() error {
 
 var _ ds.Batch = (*batch)(nil)
 
-func (b *batch) Put(key ds.Key, value []byte) error {
+func (b *batch) Put(_ context.Context, key ds.Key, value []byte) error {
 	b.ds.closeLk.RLock()
 	defer b.ds.closeLk.RUnlock()
 	if b.ds.closed {
@@ -438,7 +439,7 @@ func (b *batch) put(key ds.Key, value []byte) error {
 	return b.writeBatch.Set(key.Bytes(), value)
 }
 
-func (b *batch) Delete(key ds.Key) error {
+func (b *batch) Delete(_ context.Context, key ds.Key) error {
 	b.ds.closeLk.RLock()
 	defer b.ds.closeLk.RUnlock()
 	if b.ds.closed {
@@ -452,7 +453,7 @@ func (b *batch) delete(key ds.Key) error {
 	return b.writeBatch.Delete(key.Bytes())
 }
 
-func (b *batch) Commit() error {
+func (b *batch) Commit(_ context.Context) error {
 	b.ds.closeLk.RLock()
 	defer b.ds.closeLk.RUnlock()
 	if b.ds.closed {
@@ -492,7 +493,7 @@ func (b *batch) cancel() {
 var _ ds.Datastore = (*txn)(nil)
 var _ ds.TTLDatastore = (*txn)(nil)
 
-func (t *txn) Put(key ds.Key, value []byte) error {
+func (t *txn) Put(_ context.Context, key ds.Key, value []byte) error {
 	t.ds.closeLk.RLock()
 	defer t.ds.closeLk.RUnlock()
 	if t.ds.closed {
@@ -505,7 +506,7 @@ func (t *txn) put(key ds.Key, value []byte) error {
 	return t.txn.Set(key.Bytes(), value)
 }
 
-func (t *txn) Sync(prefix ds.Key) error {
+func (t *txn) Sync(_ context.Context, prefix ds.Key) error {
 	t.ds.closeLk.RLock()
 	defer t.ds.closeLk.RUnlock()
 	if t.ds.closed {
@@ -515,7 +516,7 @@ func (t *txn) Sync(prefix ds.Key) error {
 	return nil
 }
 
-func (t *txn) PutWithTTL(key ds.Key, value []byte, ttl time.Duration) error {
+func (t *txn) PutWithTTL(_ context.Context, key ds.Key, value []byte, ttl time.Duration) error {
 	t.ds.closeLk.RLock()
 	defer t.ds.closeLk.RUnlock()
 	if t.ds.closed {
@@ -528,7 +529,7 @@ func (t *txn) putWithTTL(key ds.Key, value []byte, ttl time.Duration) error {
 	return t.txn.SetEntry(badger.NewEntry(key.Bytes(), value).WithTTL(ttl))
 }
 
-func (t *txn) GetExpiration(key ds.Key) (time.Time, error) {
+func (t *txn) GetExpiration(_ context.Context, key ds.Key) (time.Time, error) {
 	t.ds.closeLk.RLock()
 	defer t.ds.closeLk.RUnlock()
 	if t.ds.closed {
@@ -548,7 +549,7 @@ func (t *txn) getExpiration(key ds.Key) (time.Time, error) {
 	return time.Unix(int64(item.ExpiresAt()), 0), nil
 }
 
-func (t *txn) SetTTL(key ds.Key, ttl time.Duration) error {
+func (t *txn) SetTTL(_ context.Context, key ds.Key, ttl time.Duration) error {
 	t.ds.closeLk.RLock()
 	defer t.ds.closeLk.RUnlock()
 	if t.ds.closed {
@@ -569,7 +570,7 @@ func (t *txn) setTTL(key ds.Key, ttl time.Duration) error {
 
 }
 
-func (t *txn) Get(key ds.Key) ([]byte, error) {
+func (t *txn) Get(_ context.Context, key ds.Key) ([]byte, error) {
 	t.ds.closeLk.RLock()
 	defer t.ds.closeLk.RUnlock()
 	if t.ds.closed {
@@ -591,7 +592,7 @@ func (t *txn) get(key ds.Key) ([]byte, error) {
 	return item.ValueCopy(nil)
 }
 
-func (t *txn) Has(key ds.Key) (bool, error) {
+func (t *txn) Has(_ context.Context, key ds.Key) (bool, error) {
 	t.ds.closeLk.RLock()
 	defer t.ds.closeLk.RUnlock()
 	if t.ds.closed {
@@ -613,7 +614,7 @@ func (t *txn) has(key ds.Key) (bool, error) {
 	}
 }
 
-func (t *txn) GetSize(key ds.Key) (int, error) {
+func (t *txn) GetSize(_ context.Context, key ds.Key) (int, error) {
 	t.ds.closeLk.RLock()
 	defer t.ds.closeLk.RUnlock()
 	if t.ds.closed {
@@ -635,7 +636,7 @@ func (t *txn) getSize(key ds.Key) (int, error) {
 	}
 }
 
-func (t *txn) Delete(key ds.Key) error {
+func (t *txn) Delete(_ context.Context, key ds.Key) error {
 	t.ds.closeLk.RLock()
 	defer t.ds.closeLk.RUnlock()
 	if t.ds.closed {
@@ -649,7 +650,7 @@ func (t *txn) delete(key ds.Key) error {
 	return t.txn.Delete(key.Bytes())
 }
 
-func (t *txn) Query(q dsq.Query) (dsq.Results, error) {
+func (t *txn) Query(_ context.Context, q dsq.Query) (dsq.Results, error) {
 	t.ds.closeLk.RLock()
 	defer t.ds.closeLk.RUnlock()
 	if t.ds.closed {
@@ -838,7 +839,7 @@ func (t *txn) query(q dsq.Query) (dsq.Results, error) {
 	return qrb.Results(), nil
 }
 
-func (t *txn) Commit() error {
+func (t *txn) Commit(_ context.Context) error {
 	t.ds.closeLk.RLock()
 	defer t.ds.closeLk.RUnlock()
 	if t.ds.closed {
@@ -866,7 +867,7 @@ func (t *txn) close() error {
 	return t.txn.Commit()
 }
 
-func (t *txn) Discard() {
+func (t *txn) Discard(_ context.Context) {
 	t.ds.closeLk.RLock()
 	defer t.ds.closeLk.RUnlock()
 	if t.ds.closed {
