@@ -210,6 +210,10 @@ func (d *Datastore) newImplicitTransaction(readOnly bool) *txn {
 	return &txn{d, d.DB.NewTransaction(!readOnly), true}
 }
 
+func (d *Datastore) NewTransactionExtended(ctx context.Context, readOnly bool) (ds.Txn, error) {
+	return d.NewTransaction(ctx, readOnly)
+}
+
 func (d *Datastore) Put(ctx context.Context, key ds.Key, value []byte) error {
 	d.closeLk.RLock()
 	defer d.closeLk.RUnlock()
@@ -354,6 +358,10 @@ func (d *Datastore) Query(ctx context.Context, q dsq.Query) (dsq.Results, error)
 	// https://github.com/dgraph-io/badger/commit/b1ad1e93e483bbfef123793ceedc9a7e34b09f79
 	// The closing logic in the query goprocess takes care of discarding the implicit transaction.
 	return txn.query(q)
+}
+
+func (d *Datastore) QueryExtended(ctx context.Context, q dsq.Query) (dsq.Results, error) {
+	return d.Query(ctx, q)
 }
 
 // DiskUsage implements the PersistentDatastore interface.
