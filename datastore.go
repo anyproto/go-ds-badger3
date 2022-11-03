@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	dse "github.com/textileio/go-datastore-extensions"
 	"runtime"
 	"strings"
 	"sync"
@@ -210,8 +211,8 @@ func (d *Datastore) newImplicitTransaction(readOnly bool) *txn {
 	return &txn{d, d.DB.NewTransaction(!readOnly), true}
 }
 
-func (d *Datastore) NewTransactionExtended(ctx context.Context, readOnly bool) (ds.Txn, error) {
-	return d.NewTransaction(ctx, readOnly)
+func (d *Datastore) NewTransactionExtended(ctx context.Context, readOnly bool) (dse.TxnExt, error) {
+	return &txn{d, d.DB.NewTransaction(!readOnly), false}, nil
 }
 
 func (d *Datastore) Put(ctx context.Context, key ds.Key, value []byte) error {
@@ -360,8 +361,8 @@ func (d *Datastore) Query(ctx context.Context, q dsq.Query) (dsq.Results, error)
 	return txn.query(q)
 }
 
-func (d *Datastore) QueryExtended(ctx context.Context, q dsq.Query) (dsq.Results, error) {
-	return d.Query(ctx, q)
+func (d *Datastore) QueryExtended(ctx context.Context, q dse.QueryExt) (dsq.Results, error) {
+	return d.Query(ctx, q.Query)
 }
 
 // DiskUsage implements the PersistentDatastore interface.
@@ -668,6 +669,10 @@ func (t *txn) Query(ctx context.Context, q dsq.Query) (dsq.Results, error) {
 	}
 
 	return t.query(q)
+}
+
+func (t *txn) QueryExtended(ctx context.Context, q dse.QueryExt) (dsq.Results, error) {
+	return t.Query(ctx, q.Query)
 }
 
 func (t *txn) query(q dsq.Query) (dsq.Results, error) {
