@@ -1,4 +1,4 @@
-module github.com/anytypeio/go-ds-badger3
+module github.com/anyproto/go-ds-badger3
 
 require (
 	github.com/dgraph-io/badger/v3 v3.0.0-20220429165824-bc74fea7d03b
@@ -10,4 +10,4 @@ require (
 
 go 1.13
 
-replace github.com/dgraph-io/badger/v3 => github.com/anytypeio/badger/v3 v3.0.0-20220504124523-ca79ca5ff94d
+replace github.com/dgraph-io/badger/v3 => github.com/anyproto/badger/v3 v3.0.0-20220504124523-ca79ca5ff94d
